@@ -13,6 +13,7 @@ import feedRouter from "./routes/feed.routes";
 import searchRouter from "./routes/search.routes";
 import notificationRourer from "./routes/notification.routes";
 import conversationRouter from "./routes/conversation.routes";
+import messageRouter from "./routes/message.routes";
 
 const app: Application = express();
 
@@ -36,6 +37,7 @@ app.use("/api/feed",feedRouter)
 app.use('/api/search',searchRouter)
 app.use('/api/notification', notificationRourer)
 app.use('/api/conversation',conversationRouter)
+app.use('/api/message',messageRouter)
 
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof multer.MulterError) {
