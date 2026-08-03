@@ -42,20 +42,16 @@ export const useUpdateProfile = () => {
     mutationFn: authService.updateProfile,
 
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["me"],
-      });
+
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
 
       const userId = variables.get("userId") as string | null;
 
       if (userId) {
-        queryClient.invalidateQueries({
-          queryKey: ["profile", userId],
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: ["user-posts", userId],
-        });
+        // Also refresh the specific user-profile and their posts
+        queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+        queryClient.invalidateQueries({ queryKey: ["user-posts", userId] });
       }
     },
   });
