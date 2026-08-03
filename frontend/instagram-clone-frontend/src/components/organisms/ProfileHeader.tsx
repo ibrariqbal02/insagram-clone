@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import {
   useMyProfile,
@@ -11,9 +11,11 @@ import { useCreateConversation } from "../../hooks/useConversation";
 
 type Props = {
   userId: string;
+  /** Called when the "Edit Profile" button is clicked on the logged-in user's own profile */
+  onEditClick?: () => void;
 };
 
-const ProfileHeader = ({ userId }: Props) => {
+const ProfileHeader = ({ userId, onEditClick }: Props) => {
   const navigate = useNavigate();
 
   const { data: profile, isLoading } = useUserProfile(userId);
@@ -25,14 +27,21 @@ const ProfileHeader = ({ userId }: Props) => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
+      <div className="flex justify-center py-20 text-gray-500">
         Loading profile...
       </div>
     );
   }
 
-  const user = profile.user;
+  if (!profile?.user) {
+    return (
+      <div className="flex justify-center py-20 text-gray-500">
+        User not found.
+      </div>
+    );
+  }
 
+  const user = profile.user;
   const isMe = myProfile?.user?._id === user._id;
 
   const isFollowing =
@@ -54,38 +63,35 @@ const ProfileHeader = ({ userId }: Props) => {
 
   return (
     <div className="rounded-xl bg-white p-8 shadow">
-
       <div className="flex flex-col gap-8 md:flex-row">
 
         {/* Avatar */}
-
         <div className="flex justify-center">
-
-          <img
-            src={user.profilePicture}
-            alt={user.name}
-            className="h-40 w-40 rounded-full border object-cover"
-          />
-
+          {user.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt={user.name}
+              className="h-40 w-40 rounded-full border object-cover"
+            />
+          ) : (
+            <div className="h-40 w-40 rounded-full border bg-gray-200 flex items-center justify-center text-4xl font-bold text-gray-500">
+              {user.name?.[0]?.toUpperCase() ?? "?"}
+            </div>
+          )}
         </div>
 
         {/* User Info */}
-
         <div className="flex-1">
-
           <div className="flex flex-wrap items-center gap-4">
-
-            <h1 className="text-3xl font-bold">
-              {user.name}
-            </h1>
+            <h1 className="text-3xl font-bold">{user.name}</h1>
 
             {isMe ? (
-              <Link
-                to="/edit-profile"
+              <button
+                onClick={onEditClick}
                 className="rounded-lg border px-5 py-2 hover:bg-gray-100"
               >
                 Edit Profile
-              </Link>
+              </button>
             ) : (
               <>
                 <button
@@ -109,63 +115,42 @@ const ProfileHeader = ({ userId }: Props) => {
                   disabled={createConversation.isPending}
                   className="rounded-lg border px-5 py-2 hover:bg-gray-100"
                 >
-                  {createConversation.isPending
-                    ? "Opening..."
-                    : "Message"}
+                  {createConversation.isPending ? "Opening..." : "Message"}
                 </button>
               </>
             )}
-
           </div>
 
-          <p className="mt-2 text-gray-500">
-            @{user.username}
-          </p>
+          <p className="mt-2 text-gray-500">@{user.username}</p>
 
-          <p className="mt-4">
-            {user.bio || "No bio yet."}
-          </p>
+          <p className="mt-4">{user.bio || "No bio yet."}</p>
 
           {/* Stats */}
-
           <div className="mt-8 flex gap-10">
-
             <div>
               <h2 className="text-xl font-bold">
-                {posts?.posts?.length || 0}
+                {posts?.posts?.length ?? 0}
               </h2>
-
-              <p className="text-gray-500">
-                Posts
-              </p>
+              <p className="text-gray-500">Posts</p>
             </div>
 
             <div>
               <h2 className="text-xl font-bold">
-                {user.followers?.length || 0}
+                {user.followers?.length ?? 0}
               </h2>
-
-              <p className="text-gray-500">
-                Followers
-              </p>
+              <p className="text-gray-500">Followers</p>
             </div>
 
             <div>
               <h2 className="text-xl font-bold">
-                {user.following?.length || 0}
+                {user.following?.length ?? 0}
               </h2>
-
-              <p className="text-gray-500">
-                Following
-              </p>
+              <p className="text-gray-500">Following</p>
             </div>
-
           </div>
-
         </div>
 
       </div>
-
     </div>
   );
 };

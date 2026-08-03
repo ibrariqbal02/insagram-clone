@@ -5,7 +5,7 @@ import Sidebar from "../organisms/Sidebar";
 const MainLayout = () => {
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Top Navbar */}
+      
       <Navbar />
 
       {/* Sidebar (desktop) + mobile bottom nav both live inside Sidebar component */}
