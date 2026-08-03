@@ -6,9 +6,9 @@ import CreatePost from "../pages/CreatePost/CreatePost";
 import Profile from "../pages/Profile/Profile";
 import MainLayout from "../components/templates/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
-import { Search } from "lucide-react";
 import Notifications from "../pages/Notifications/Notifications";
-import PostCard from "../components/organisms/PostCard";
+import Messages from "../pages/Messages/Messages";
+import Search from "../pages/Search/Search";
 
 const AppRoutes = () => {
   return (
@@ -21,10 +21,16 @@ const AppRoutes = () => {
           <Route element={<MainLayout />}>
             <Route path="/" element={<Home />} />
             <Route path="/create-post" element={<CreatePost />} />
+            {/* Profile — own profile has no param, visiting another user uses :userId */}
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/search" element={<Search />} />
+            {/* Both /notification and /notifications work */}
+            <Route path="/notification" element={<Notifications />} />
             <Route path="/notifications" element={<Notifications />} />
-          
+            {/* Messages */}
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/messages/:conversationId" element={<Messages />} />
           </Route>
         </Route>
       </Routes>
