@@ -9,6 +9,10 @@ import jwt from "jsonwebtoken";
 import uploadToCloud from "../utils/uploadToCloudinary";
 import crypto from "crypto";
 import sendEmail from "../utils/sendEmail";
+import Post from "../models/Post.model";
+import Comment from "../models/Comment.model";
+import Notification from "../models/Notification.model";
+import deleteFromCloudinary from "../utils/deleteFromCloudinary";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -81,7 +85,8 @@ export const login = async (req: Request, res: Response) => {
         message: "All fields are required.",
       });
     }
-
+    
+    
     const user = await User.findOne({
       $or: [{ email: login }, { username: login }],
     });
@@ -232,6 +237,36 @@ export const getMyProfile = async (req: Request, res: Response) => {
     const user = await User.findById(req.userId).select(
       "-password -refreshToken"
     );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const getUserProfile = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // Keep followers/following as raw id arrays (not populated) — the rest of
+    // the frontend (isFollowing checks, FollowersModal/FollowingModal) compares
+    // these directly against plain user ids, same shape as getMyProfile returns.
+    const user = await User.findById(userId).select("-password -refreshToken");
 
     if (!user) {
       return res.status(404).json({
@@ -454,6 +489,63 @@ export const resetPassword = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Password reset successfully.",
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const deleteAccount = async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // Remove the user's posts and their Cloudinary images
+    const posts = await Post.find({ owner: userId });
+
+    for (const post of posts) {
+      for (const image of post.images) {
+        await deleteFromCloudinary(image.publicId).catch(() => {});
+      }
+    }
+
+    await Post.deleteMany({ owner: userId });
+
+    // Remove the user's comments and any notifications tied to them
+    await Comment.deleteMany({ owner: userId });
+
+    await Notification.deleteMany({
+      $or: [{ sender: userId }, { receiver: userId }],
+    });
+
+    // Detach the user from everyone else's followers/following lists
+    await User.updateMany(
+      {},
+      { $pull: { followers: userId, following: userId } }
+    );
+
+    await User.findByIdAndDelete(userId);
+
+    res.clearCookie("accessToken");
+
+    res.clearCookie("refreshToken");
+
+    return res.status(200).json({
+      success: true,
+      message: "Account deleted successfully.",
     });
   } catch (error) {
     console.error(error);

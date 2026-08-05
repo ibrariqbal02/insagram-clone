@@ -7,11 +7,6 @@ export const sendMessage = async (req: Request, res: Response) => {
   try {
     const conversationId = req.params.conversationId as string;
     const content = req.body?.content;
-    console.log("Conversation ID:", conversationId);
-
-    const all = await Conversation.find();
-
-    console.log(all);
 
     if (!content) {
       return res.status(400).json({
@@ -48,6 +43,7 @@ export const sendMessage = async (req: Request, res: Response) => {
         sender: req.userId,
         receiver,
         type: "message",
+        conversation: conversationId,
       });
     }
 

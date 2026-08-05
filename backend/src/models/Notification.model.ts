@@ -32,6 +32,12 @@ const notificationSchema = new Schema(
       default: null,
     },
 
+    conversation: {
+      type: Types.ObjectId,
+      ref: "Conversation",
+      default: null,
+    },
+
     isRead: {
       type: Boolean,
       default: false,

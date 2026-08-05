@@ -51,6 +51,7 @@ export const getMyConversations = async (req: Request, res: Response) => {
       participants: req.userId,
     })
       .populate("participants", "name username profilePicture")
+      .populate("lastMessage", "content createdAt sender")
       .sort({ updatedAt: -1 });
 
     return res.status(200).json({
