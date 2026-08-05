@@ -85,7 +85,8 @@ export const login = async (req: Request, res: Response) => {
         message: "All fields are required.",
       });
     }
-
+    
+    
     const user = await User.findOne({
       $or: [{ email: login }, { username: login }],
     });
