@@ -8,9 +8,11 @@ export const getComments = async (postId: string) => {
 export const createComment = async (data: {
   postId: string;
   text: string;
+  parentComment?: string;
 }) => {
   const response = await api.post(`/comment/${data.postId}`, {
     text: data.text,
+    parentComment: data.parentComment,
   });
 
   return response.data;

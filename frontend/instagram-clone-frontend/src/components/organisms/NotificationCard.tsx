@@ -13,7 +13,9 @@ const NotificationCard = ({ notification, onClick, onDelete }: Props) => {
     notification.type === "follow"
       ? "started following you"
       : notification.type === "like"
-      ? "liked your post"
+      ? notification.comment
+        ? "liked your comment"
+        : "liked your post"
       : notification.type === "comment"
       ? "commented on your post"
       : notification.type === "reply"

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Heart, Trash2, Pencil, X } from "lucide-react";
 
 import { useMe } from "../../hooks/useAuth";
@@ -7,13 +8,7 @@ import {
   useLikeUnlikePost,
   usePostById,
 } from "../../hooks/usePost";
-import {
-  useComments,
-  useCreateComment,
-  useDeleteComment,
-  useLikeUnlikeComment,
-  useUpdateComment,
-} from "../../hooks/useComment";
+import CommentList from "./CommentList";
 import EditPostModal from "./EditPostModal";
 
 type Props = {
@@ -25,22 +20,12 @@ const PostDetailsModal = ({ postId, onClose }: Props) => {
   const { data: me } = useMe();
   const myId = me?.user?._id;
 
-  const [text, setText] = useState("");
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState("");
   const [openEditPost, setOpenEditPost] = useState(false);
 
   const { data: postData, isLoading } = usePostById(postId);
   const post = postData?.post;
 
-  const { data: commentsData, isLoading: commentsLoading } = useComments(postId);
-  const comments = commentsData?.comments || [];
-
   const likePost = useLikeUnlikePost();
-  const createComment = useCreateComment();
-  const updateComment = useUpdateComment();
-  const deleteComment = useDeleteComment();
-  const likeUnlikeComment = useLikeUnlikeComment();
   const deletePost = useDeletePost();
 
   const isOwner = post?.owner?._id === myId;
@@ -49,42 +34,6 @@ const PostDetailsModal = ({ postId, onClose }: Props) => {
     if (!myId) return false;
     return (post?.likes || []).some((id: string) => id === myId);
   }, [myId, post?.likes]);
-
-  const handleCreateComment = () => {
-    if (!text.trim()) return;
-
-    createComment.mutate(
-      { postId, text },
-      {
-        onSuccess: () => {
-          setText("");
-        },
-      }
-    );
-  };
-
-  const handleStartEditComment = (comment: any) => {
-    setEditingCommentId(comment._id);
-    setEditingText(comment.text || "");
-  };
-
-  const handleSaveEditComment = () => {
-    if (!editingCommentId) return;
-    if (!editingText.trim()) return;
-
-    updateComment.mutate(
-      {
-        commentId: editingCommentId,
-        text: editingText,
-      },
-      {
-        onSuccess: () => {
-          setEditingCommentId(null);
-          setEditingText("");
-        },
-      }
-    );
-  };
 
   const handleDeletePost = () => {
     const ok = window.confirm("Delete this post?");
@@ -102,7 +51,11 @@ const PostDetailsModal = ({ postId, onClose }: Props) => {
       <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 px-4">
         <div className="bg-white rounded-xl w-full max-w-4xl max-h-[85vh] overflow-hidden">
           <div className="flex items-center justify-between border-b px-4 py-3">
-            <div className="flex items-center gap-3">
+            <Link
+              to={post?.owner?._id ? `/profile/${post.owner._id}` : "#"}
+              onClick={onClose}
+              className="flex items-center gap-3"
+            >
               {post?.owner?.profilePicture && (
                 <img
                   src={post.owner.profilePicture}
@@ -111,12 +64,12 @@ const PostDetailsModal = ({ postId, onClose }: Props) => {
                 />
               )}
               <div className="leading-tight">
-                <div className="font-semibold">{post?.owner?.name}</div>
+                <div className="font-semibold hover:underline">{post?.owner?.name}</div>
                 <div className="text-xs text-gray-500">
                   @{post?.owner?.username}
                 </div>
               </div>
-            </div>
+            </Link>
 
             <div className="flex items-center gap-2">
               {isOwner && (
@@ -179,114 +132,19 @@ const PostDetailsModal = ({ postId, onClose }: Props) => {
 
                   {post?.caption && (
                     <div className="mt-3 text-sm">
-                      <span className="font-semibold mr-2">
+                      <Link
+                        to={`/profile/${post.owner._id}`}
+                        onClick={onClose}
+                        className="font-semibold mr-2 hover:underline"
+                      >
                         {post.owner.username}
-                      </span>
+                      </Link>
                       {post.caption}
                     </div>
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {commentsLoading && <div>Loading comments...</div>}
-
-                  {!commentsLoading && comments.length === 0 && (
-                    <div className="text-center text-gray-500">
-                      No comments yet.
-                    </div>
-                  )}
-
-                  {comments.map((comment: any) => {
-                    const isMyComment = comment.owner?._id === myId;
-                    const isEditing = editingCommentId === comment._id;
-
-                    return (
-                      <div key={comment._id} className="flex items-start gap-3">
-                        <img
-                          src={comment.owner?.profilePicture}
-                          alt={comment.owner?.name}
-                          className="w-9 h-9 rounded-full object-cover"
-                        />
-
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="text-sm font-semibold">
-                              {comment.owner?.username}
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => likeUnlikeComment.mutate(comment._id)}
-                                className="text-gray-500 hover:text-black"
-                              >
-                                <Heart size={16} />
-                              </button>
-                              {isMyComment && (
-                                <>
-                                  <button
-                                    onClick={() => handleStartEditComment(comment)}
-                                    className="text-xs text-gray-500 hover:text-black"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => deleteComment.mutate(comment._id)}
-                                    className="text-xs text-red-600"
-                                  >
-                                    Delete
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-
-                          {isEditing ? (
-                            <div className="mt-2 flex gap-2">
-                              <input
-                                value={editingText}
-                                onChange={(e) => setEditingText(e.target.value)}
-                                className="flex-1 border rounded-lg px-3 py-2 text-sm outline-none"
-                              />
-                              <button
-                                onClick={handleSaveEditComment}
-                                className="px-4 rounded-lg bg-blue-600 text-white text-sm"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setEditingCommentId(null);
-                                  setEditingText("");
-                                }}
-                                className="px-4 rounded-lg border text-sm"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="text-sm mt-1">{comment.text}</div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="border-t p-4 flex gap-2">
-                  <input
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 border rounded-lg px-3 py-2 outline-none"
-                  />
-                  <button
-                    onClick={handleCreateComment}
-                    disabled={createComment.isPending}
-                    className="bg-blue-600 text-white px-5 rounded-lg"
-                  >
-                    Send
-                  </button>
-                </div>
+                <CommentList postId={postId} currentUserId={myId} />
               </div>
             </div>
           )}

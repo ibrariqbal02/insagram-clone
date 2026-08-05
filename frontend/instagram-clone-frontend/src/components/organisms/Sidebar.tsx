@@ -7,7 +7,7 @@ import {
   User,
   LogOut,
 } from "lucide-react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useNotifications } from "../../hooks/useNotification";
 import api from "../../api/axios";
 

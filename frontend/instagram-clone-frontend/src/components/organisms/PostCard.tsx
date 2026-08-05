@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Heart,
   MessageCircle,
@@ -6,8 +7,9 @@ import {
   MoreHorizontal,
 } from "lucide-react";
 
-import CommentModal from "./CommentModal";
+import PostDetailsModal from "./PostDetailsModal";
 import { useLikeUnlikePost } from "../../hooks/usePost";
+import { useMe } from "../../hooks/useAuth";
 
 type Image = {
   url: string;
@@ -35,9 +37,17 @@ type Props = {
 };
 
 const PostCard = ({ post }: Props) => {
-  const [showComments, setShowComments] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const { data: me } = useMe();
+  const myId = me?.user?._id;
 
   const likeMutation = useLikeUnlikePost();
+
+  const isLiked = useMemo(() => {
+    if (!myId) return false;
+    return post.likes.some((id) => id === myId);
+  }, [myId, post.likes]);
 
   const handleLike = () => {
     likeMutation.mutate(post._id);
@@ -51,7 +61,7 @@ const PostCard = ({ post }: Props) => {
 
         <div className="flex items-center justify-between p-4">
 
-          <div className="flex items-center gap-3">
+          <Link to={`/profile/${post.owner._id}`} className="flex items-center gap-3">
 
             <img
               src={post.owner.profilePicture}
@@ -60,7 +70,7 @@ const PostCard = ({ post }: Props) => {
             />
 
             <div>
-              <h2 className="font-semibold">
+              <h2 className="font-semibold hover:underline">
                 {post.owner.name}
               </h2>
 
@@ -69,9 +79,9 @@ const PostCard = ({ post }: Props) => {
               </p>
             </div>
 
-          </div>
+          </Link>
 
-          <button>
+          <button onClick={() => setShowDetails(true)}>
             <MoreHorizontal size={22} />
           </button>
 
@@ -83,7 +93,8 @@ const PostCard = ({ post }: Props) => {
           <img
             src={post.images[0].url}
             alt="Post"
-            className="w-full h-[500px] object-cover"
+            onClick={() => setShowDetails(true)}
+            className="w-full h-[500px] object-cover cursor-pointer"
           />
         )}
 
@@ -102,11 +113,15 @@ const PostCard = ({ post }: Props) => {
                 disabled={likeMutation.isPending}
                 className="hover:scale-110 transition"
               >
-                <Heart size={24} />
+                <Heart
+                  size={24}
+                  className={isLiked ? "text-red-500" : ""}
+                  fill={isLiked ? "currentColor" : "none"}
+                />
               </button>
 
               <button
-                onClick={() => setShowComments(true)}
+                onClick={() => setShowDetails(true)}
                 className="hover:scale-110 transition"
               >
                 <MessageCircle size={24} />
@@ -129,9 +144,9 @@ const PostCard = ({ post }: Props) => {
           {/* Caption */}
 
           <p className="mt-2">
-            <span className="font-semibold mr-2">
+            <Link to={`/profile/${post.owner._id}`} className="font-semibold mr-2 hover:underline">
               {post.owner.username}
-            </span>
+            </Link>
 
             {post.caption}
           </p>
@@ -139,7 +154,7 @@ const PostCard = ({ post }: Props) => {
           {/* Comments */}
 
           <button
-            onClick={() => setShowComments(true)}
+            onClick={() => setShowDetails(true)}
             className="text-gray-500 mt-3 hover:text-black"
           >
             View Comments
@@ -157,10 +172,10 @@ const PostCard = ({ post }: Props) => {
 
       </div>
 
-      {showComments && (
-        <CommentModal
+      {showDetails && (
+        <PostDetailsModal
           postId={post._id}
-          onClose={() => setShowComments(false)}
+          onClose={() => setShowDetails(false)}
         />
       )}
     </>

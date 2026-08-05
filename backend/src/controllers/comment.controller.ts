@@ -2,10 +2,34 @@ import { Request, Response } from "express";
 import Post from "../models/Post.model";
 import Comment from "../models/Comment.model";
 import Notification from "../models/Notification.model";
+
+export const getComments = async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.postId as string;
+
+    const comments = await Comment.find({ post: postId })
+      .populate("owner", "name username profilePicture")
+      .sort({ createdAt: 1 });
+
+    return res.status(200).json({
+      success: true,
+      totalComments: comments.length,
+      comments,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 export const createComment = async (req: Request, res: Response) => {
   try {
     const postId = req.params.postId as string;
-    const { text } = req.body;
+    const { text, parentComment } = req.body;
 
     if (!text) {
       return res.status(400).json({
@@ -23,14 +47,39 @@ export const createComment = async (req: Request, res: Response) => {
       });
     }
 
+    let parent = null;
+
+    if (parentComment) {
+      parent = await Comment.findOne({ _id: parentComment, post: postId });
+
+      if (!parent) {
+        return res.status(404).json({
+          success: false,
+          message: "Comment being replied to was not found.",
+        });
+      }
+    }
+
     const comment = await Comment.create({
       post: postId,
       owner: req.userId,
       text,
+      parentComment: parent ? parent._id : null,
     });
 
-    // Don't notify yourself
-    if (post.owner.toString() !== req.userId) {
+    if (parent) {
+      // Replying to a comment — notify the comment's author, not the post owner
+      if (parent.owner.toString() !== req.userId) {
+        await Notification.create({
+          sender: req.userId,
+          receiver: parent.owner,
+          post: post._id,
+          comment: parent._id,
+          type: "reply",
+        });
+      }
+    } else if (post.owner.toString() !== req.userId) {
+      // Don't notify yourself
       await Notification.create({
         sender: req.userId,
         receiver: post.owner,
@@ -160,6 +209,13 @@ export const likeUnlikeComment = async (req: Request, res: Response) => {
 
       await comment.save();
 
+      await Notification.findOneAndDelete({
+        sender: req.userId,
+        receiver: comment.owner,
+        comment: comment._id,
+        type: "like",
+      });
+
       return res.status(200).json({
         success: true,
         message: "Comment unliked successfully.",
@@ -169,6 +225,16 @@ export const likeUnlikeComment = async (req: Request, res: Response) => {
     comment.likes.push(req.userId as any);
 
     await comment.save();
+
+    if (comment.owner.toString() !== req.userId) {
+      await Notification.create({
+        sender: req.userId,
+        receiver: comment.owner,
+        post: comment.post,
+        comment: comment._id,
+        type: "like",
+      });
+    }
 
     return res.status(200).json({
       success: true,

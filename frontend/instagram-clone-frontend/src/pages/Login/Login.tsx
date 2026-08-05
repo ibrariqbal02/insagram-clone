@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useLogin } from "../../hooks/useAuth";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 
 type LoginFormData = {
   login: string;
@@ -30,8 +31,8 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
 
-        <h1 className="text-3xl font-bold text-center mb-2">
-          Instagram Clone
+        <h1 className="font-logo text-5xl text-center mb-2 pb-1">
+          Instagram
         </h1>
 
         <p className="text-gray-500 text-center mb-8">
@@ -91,7 +92,7 @@ const Login = () => {
 
             <div className="text-red-500 text-center">
 
-              Login failed
+              {getErrorMessage(loginMutation.error, "Login failed")}
 
             </div>
 

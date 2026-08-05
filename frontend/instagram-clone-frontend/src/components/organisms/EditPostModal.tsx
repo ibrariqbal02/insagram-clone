@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
 import { useUpdatePost } from "../../hooks/usePost";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 
 type Props = {
   post: any;
@@ -14,6 +15,8 @@ const EditPostModal = ({ post, onClose }: Props) => {
   const [caption, setCaption] = useState(post.caption || "");
   const [files, setFiles] = useState<FileList | null>(null);
   const [preview, setPreview] = useState<string | null>(post.images?.[0]?.url || null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!files || files.length === 0) return;
@@ -56,41 +59,61 @@ const EditPostModal = ({ post, onClose }: Props) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {preview && (
-            <img
-              src={preview}
-              alt="preview"
-              className="w-full h-72 object-cover rounded-lg border"
-            />
+            <div className="relative bg-black flex items-center justify-center h-80">
+              <img
+                src={preview}
+                alt="preview"
+                className="max-h-full max-w-full object-contain"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute top-3 right-3 rounded-lg bg-black/40 hover:bg-black/60 text-white text-xs px-3 py-1.5"
+              >
+                Change photo
+              </button>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => setFiles(e.target.files)}
+              />
+            </div>
           )}
 
-          <textarea
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            className="w-full border rounded-lg px-4 py-3"
-            rows={4}
-            placeholder="Caption"
-          />
+          <div className="px-5 space-y-4 pb-5">
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              className="w-full border rounded-lg px-4 py-3"
+              rows={4}
+              placeholder="Write a caption..."
+            />
 
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setFiles(e.target.files)}
-          />
+            {updatePost.isError && (
+              <p className="text-sm text-red-500">
+                {getErrorMessage(updatePost.error, "Could not update post.")}
+              </p>
+            )}
 
-          <div className="flex justify-end gap-3">
-            <button type="button" onClick={onClose} className="px-5 py-2 border rounded-lg">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={updatePost.isPending}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-            >
-              {updatePost.isPending ? "Saving..." : "Save"}
-            </button>
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={onClose} className="px-5 py-2 border rounded-lg">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={updatePost.isPending}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+              >
+                {updatePost.isPending ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

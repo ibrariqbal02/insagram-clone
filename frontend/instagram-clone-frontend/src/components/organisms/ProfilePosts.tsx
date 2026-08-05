@@ -1,4 +1,7 @@
+import { useState } from "react";
+
 import { useUserPosts } from "../../hooks/useProfile";
+import PostDetailsModal from "./PostDetailsModal";
 
 
 type Props = {
@@ -7,6 +10,7 @@ type Props = {
 
 const ProfilePosts = ({ userId }: Props) => {
   const { data, isLoading } = useUserPosts(userId);
+  const [openPostId, setOpenPostId] = useState<string | null>(null);
 
   if (isLoading) {
     return (
@@ -33,6 +37,7 @@ const ProfilePosts = ({ userId }: Props) => {
   }
 
   return (
+    <>
     <div
       className="
         grid
@@ -45,6 +50,7 @@ const ProfilePosts = ({ userId }: Props) => {
       {posts.map((post: any) => (
         <div
           key={post._id}
+          onClick={() => setOpenPostId(post._id)}
           className="
             group
             relative
@@ -109,6 +115,14 @@ const ProfilePosts = ({ userId }: Props) => {
         </div>
       ))}
     </div>
+
+    {openPostId && (
+      <PostDetailsModal
+        postId={openPostId}
+        onClose={() => setOpenPostId(null)}
+      />
+    )}
+    </>
   );
 };
 

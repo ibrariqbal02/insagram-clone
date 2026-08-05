@@ -61,10 +61,16 @@ export const forgotPassword = async (email: string) => {
 };
 
 export const resetPassword = async (data: {
-  token: string;
-  password: string;
+  email: string;
+  otp: string;
+  newPassword: string;
 }) => {
   const response = await api.patch("/auth/reset-password", data);
 
+  return response.data;
+};
+
+export const deleteAccount = async () => {
+  const response = await api.delete("/auth/delete-account");
   return response.data;
 };

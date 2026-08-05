@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useRegister } from "../../hooks/useAuth";
+import { getErrorMessage } from "../../utils/getErrorMessage";
 
 type RegisterFormData = {
   name: string;
@@ -31,10 +32,10 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center">Create Account</h1>
+        <h1 className="font-logo text-5xl text-center pb-1">Instagram</h1>
 
         <p className="text-center text-gray-500 mt-2 mb-8">
-          Join Instagram Clone
+          Sign up to see photos from your friends
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -109,7 +110,9 @@ const Register = () => {
           </div>
 
           {registerMutation.isError && (
-            <p className="text-center text-red-500">Registration failed.</p>
+            <p className="text-center text-red-500">
+              {getErrorMessage(registerMutation.error, "Registration failed.")}
+            </p>
           )}
 
           <button

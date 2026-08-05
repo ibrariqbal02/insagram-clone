@@ -74,3 +74,15 @@ export const useResetPassword = () => {
     mutationFn: authService.resetPassword,
   });
 };
+
+export const useDeleteAccount = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: authService.deleteAccount,
+
+    onSuccess: () => {
+      queryClient.clear();
+    },
+  });
+};

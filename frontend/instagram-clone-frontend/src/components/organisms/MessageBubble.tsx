@@ -4,7 +4,12 @@ type Props = {
 };
 
 const MessageBubble = ({ message, isMine }: Props) => {
-  const time = new Date(message.createdAt).toLocaleTimeString([], {
+  const sentAt = new Date(message.createdAt);
+
+  const timestamp = sentAt.toLocaleString([], {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -33,7 +38,7 @@ const MessageBubble = ({ message, isMine }: Props) => {
               : "text-gray-500"
           }`}
         >
-          {time}
+          {timestamp}
         </p>
       </div>
     </div>

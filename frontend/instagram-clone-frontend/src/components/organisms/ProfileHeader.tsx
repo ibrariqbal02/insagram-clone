@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -8,6 +9,8 @@ import {
 
 import { useFollowUser } from "../../hooks/useFollow";
 import { useCreateConversation } from "../../hooks/useConversation";
+import FollowersModal from "./FollowersModal";
+import FollowingModal from "./FollowingModal";
 
 type Props = {
   userId: string;
@@ -24,6 +27,9 @@ const ProfileHeader = ({ userId, onEditClick }: Props) => {
 
   const followUser = useFollowUser();
   const createConversation = useCreateConversation();
+
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
 
   if (isLoading) {
     return (
@@ -134,23 +140,31 @@ const ProfileHeader = ({ userId, onEditClick }: Props) => {
               <p className="text-gray-500">Posts</p>
             </div>
 
-            <div>
+            <button onClick={() => setShowFollowers(true)} className="text-left">
               <h2 className="text-xl font-bold">
                 {user.followers?.length ?? 0}
               </h2>
               <p className="text-gray-500">Followers</p>
-            </div>
+            </button>
 
-            <div>
+            <button onClick={() => setShowFollowing(true)} className="text-left">
               <h2 className="text-xl font-bold">
                 {user.following?.length ?? 0}
               </h2>
               <p className="text-gray-500">Following</p>
-            </div>
+            </button>
           </div>
         </div>
 
       </div>
+
+      {showFollowers && (
+        <FollowersModal userId={user._id} onClose={() => setShowFollowers(false)} />
+      )}
+
+      {showFollowing && (
+        <FollowingModal userId={user._id} onClose={() => setShowFollowing(false)} />
+      )}
     </div>
   );
 };

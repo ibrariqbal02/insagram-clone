@@ -50,7 +50,7 @@ const Notifications = () => {
                 }
 
                 if (n.type === "message") {
-                  navigate("/messages");
+                  navigate(n.conversation ? `/messages/${n.conversation}` : "/messages");
                   return;
                 }
 
